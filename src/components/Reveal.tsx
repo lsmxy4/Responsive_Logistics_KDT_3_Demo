@@ -27,12 +27,13 @@ export default function Reveal({
   const { ref, inView } = useInView<HTMLElement>({ once })
   const base = variant === 'zoom' ? 'reveal-zoom' : 'reveal'
   const Comp = Tag as ElementType
+  const isFigma = typeof window !== 'undefined' && window.location.search.includes('figma=1')
 
   return (
     <Comp
       ref={ref}
-      className={`${base} ${inView ? 'is-visible' : ''} ${className}`}
-      style={{ '--reveal-delay': `${delay}ms` } as CSSProperties}
+      className={isFigma ? className : `${base} ${inView ? 'is-visible' : ''} ${className}`}
+      style={isFigma ? {} : ({ '--reveal-delay': `${delay}ms` } as CSSProperties)}
     >
       {children}
     </Comp>

@@ -36,8 +36,9 @@ import {
   ALERTS,
   type Tint,
 } from '../data/dashboard'
-
 /* ── 공용 유틸 ───────────────────────────────────────────────── */
+const isFigma = typeof window !== 'undefined' && window.location.search.includes('figma=1')
+
 const TINT: Record<Tint, string> = {
   sky: 'bg-sky-50 text-sky-600',
   indigo: 'bg-indigo-50 text-indigo-600',
@@ -185,7 +186,7 @@ function OrderCard({ loading, delay }: { loading: boolean; delay: number }) {
           {ORDER_STATUS.map((s, i) => (
             <div
               key={s.label}
-              className={`grow-bar h-full ${inView && !loading ? 'is-visible' : ''}`}
+              className={`h-full ${inView && !loading ? 'is-visible' : ''} ${isFigma ? '!w-[var(--bar-w)] transition-none' : 'grow-bar'}`}
               style={{ '--bar-w': `${(s.count / ORDER_TOTAL) * 100}%`, '--reveal-delay': `${i * 60}ms`, background: s.color } as CSSProperties}
             />
           ))}
@@ -235,7 +236,7 @@ function DeliveryCard({ loading, delay }: { loading: boolean; delay: number }) {
           </div>
           <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-slate-100">
             <div
-              className={`grow-bar h-full rounded-full bg-gradient-to-r from-sky-500 to-emerald-400 ${inView && !loading ? 'is-visible' : ''}`}
+              className={`h-full rounded-full bg-gradient-to-r from-sky-500 to-emerald-400 ${inView && !loading ? 'is-visible' : ''} ${isFigma ? '!w-[var(--bar-w)] transition-none' : 'grow-bar'}`}
               style={{ '--bar-w': `${DELIVERY.onTimeRate}%` } as CSSProperties}
             />
           </div>
@@ -307,7 +308,7 @@ function WarehouseCard({ loading, delay }: { loading: boolean; delay: number }) 
                 <span className="w-16 shrink-0 text-[13px] font-semibold text-slate-700">{w.name}</span>
                 <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-slate-100">
                   <div
-                    className={`grow-bar h-full rounded-full bg-gradient-to-r from-teal-400 to-emerald-500 ${inView ? 'is-visible' : ''}`}
+                    className={`h-full rounded-full bg-gradient-to-r from-teal-400 to-emerald-500 ${inView ? 'is-visible' : ''} ${isFigma ? '!w-[var(--bar-w)] transition-none' : 'grow-bar'}`}
                     style={{ '--bar-w': `${w.capacity}%`, '--reveal-delay': `${i * 120}ms` } as CSSProperties}
                   />
                 </div>
@@ -489,16 +490,17 @@ function AlertsCard({ loading, delay }: { loading: boolean; delay: number }) {
 const PERIODS = ['오늘', '이번 주', '이번 달'] as const
 
 export default function DashboardPage() {
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(!isFigma)
   const [refreshKey, setRefreshKey] = useState(0)
   const [period, setPeriod] = useState<(typeof PERIODS)[number]>('오늘')
-  const [showBanner, setShowBanner] = useState(true)
+  const [showBanner, setShowBanner] = useState(!isFigma)
 
   useEffect(() => {
+    if (isFigma) return
     setLoading(true)
     const t = setTimeout(() => setLoading(false), 700)
     return () => clearTimeout(t)
-  }, [refreshKey])
+  }, [refreshKey, isFigma])
 
   return (
     <div className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">

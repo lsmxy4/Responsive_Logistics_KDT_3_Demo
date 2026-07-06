@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 import {
   Snowflake,
   LayoutDashboard,
@@ -14,6 +15,7 @@ import {
   Menu,
   X,
   ExternalLink,
+  Lock,
 } from '../components/icons'
 
 /** 메인 랜딩 사이트 주소 — 배포 시 실제 URL로 교체 */
@@ -66,6 +68,8 @@ const NAV_GROUPS: NavGroup[] = [
 ]
 
 function SidebarContent() {
+  const { isLoggedIn, logout } = useAuth()
+  
   return (
     <div className="flex h-full flex-col">
       {/* brand */}
@@ -89,7 +93,9 @@ function SidebarContent() {
               </span>
             )}
             <ul className="space-y-1">
-              {group.items.map((item) => (
+              {group.items.map((item) => {
+                const isLocked = !isLoggedIn && item.to !== '/'
+                return (
                 <li key={item.to}>
                   <NavLink
                     to={item.to}
@@ -99,12 +105,14 @@ function SidebarContent() {
                         isActive
                           ? 'bg-gradient-to-r from-sky-500 to-sky-600 font-semibold text-white shadow-sm shadow-sky-900/20'
                           : 'text-slate-400 hover:bg-white/5 hover:text-white'
-                      }`
+                      } ${isLocked ? 'opacity-60' : ''}`
                     }
                   >
                     <item.icon className="h-[18px] w-[18px] shrink-0" />
                     <span className="flex-1">{item.label}</span>
-                    {item.badge && (
+                    {isLocked ? (
+                      <Lock className="h-4 w-4 shrink-0 text-slate-500" />
+                    ) : item.badge && (
                       <span
                         className={`grid min-w-[22px] place-items-center rounded-full px-1.5 py-0.5 text-[11px] font-bold leading-none ${item.badge.cls}`}
                       >
@@ -113,7 +121,7 @@ function SidebarContent() {
                     )}
                   </NavLink>
                 </li>
-              ))}
+              )})}
             </ul>
           </div>
         ))}
@@ -122,14 +130,30 @@ function SidebarContent() {
       {/* profile + back to main site */}
       <div className="border-t border-white/10 px-4 py-4">
         <div className="flex items-center gap-3 rounded-xl bg-white/5 px-3 py-2.5">
-          <span className="relative grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-sky-400 to-sky-600 text-[14px] font-bold text-white">
-            김
-            <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[#0b1626] bg-green-400" />
-          </span>
-          <div className="min-w-0 leading-tight">
-            <b className="block truncate text-[13px] font-semibold text-white">김신선</b>
-            <span className="text-[11px] text-slate-400">물류 관리자</span>
-          </div>
+          {isLoggedIn ? (
+            <>
+              <span className="relative grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-sky-400 to-sky-600 text-[14px] font-bold text-white">
+                김
+                <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[#0b1626] bg-green-400" />
+              </span>
+              <div className="min-w-0 flex-1 leading-tight">
+                <b className="block truncate text-[13px] font-semibold text-white">김신선</b>
+                <span className="text-[11px] text-slate-400">물류 관리자</span>
+              </div>
+              <button onClick={logout} className="text-[11px] text-slate-400 hover:text-white underline">로그아웃</button>
+            </>
+          ) : (
+            <>
+              <span className="relative grid h-9 w-9 shrink-0 place-items-center rounded-full bg-slate-700 text-[14px] font-bold text-slate-400">
+                게
+              </span>
+              <div className="min-w-0 flex-1 leading-tight">
+                <b className="block truncate text-[13px] font-semibold text-white">게스트</b>
+                <span className="text-[11px] text-slate-400">데모 모드</span>
+              </div>
+              <NavLink to="/login" className="text-[12px] text-sky-400 hover:text-sky-300 font-bold whitespace-nowrap">로그인</NavLink>
+            </>
+          )}
         </div>
         <a
           href={MAIN_SITE_URL}
@@ -140,6 +164,55 @@ function SidebarContent() {
         </a>
       </div>
     </div>
+  )
+}
+
+function FigmaDownloadButton() {
+  const isFigma = typeof window !== 'undefined' && window.location.search.includes('figma=1')
+  if (!isFigma) return null
+
+  const download = () => {
+    const styles = Array.from(document.querySelectorAll('style')).map(s => s.outerHTML).join('\n')
+    const clone = document.documentElement.cloneNode(true) as HTMLElement
+    const btn = clone.querySelector('#figma-download-btn')
+    if (btn) btn.remove()
+    clone.querySelectorAll('script').forEach(s => s.remove())
+    
+    const htmlContent = `<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <title>Figma Export</title>
+  ${styles}
+  <style>
+    *, ::before, ::after {
+      animation: none !important;
+      transition: none !important;
+    }
+  </style>
+</head>
+<body class="${document.body.className}">
+  ${clone.querySelector('body')?.innerHTML || ''}
+</body>
+</html>`
+
+    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'coldchain-dashboard-figma.html'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  return (
+    <button
+      id="figma-download-btn"
+      onClick={download}
+      className="fixed bottom-6 right-6 z-[9999] rounded-xl bg-violet-600 px-5 py-3 text-[14px] font-bold text-white shadow-2xl transition-transform hover:scale-105"
+    >
+      Figma HTML 다운로드
+    </button>
   )
 }
 
@@ -221,6 +294,7 @@ export default function DemoLayout() {
       <main className="lg:pl-64">
         <Outlet />
       </main>
+      <FigmaDownloadButton />
     </div>
   )
 }

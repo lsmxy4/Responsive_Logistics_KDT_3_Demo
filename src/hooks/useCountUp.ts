@@ -22,7 +22,7 @@ export function useCountUp(end: number, { active, duration = 1400, decimals = 0 
     if (!active || started.current) return
     started.current = true
 
-    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (typeof window !== 'undefined' && (window.matchMedia('(prefers-reduced-motion: reduce)').matches || window.location.search.includes('figma=1'))) {
       setValue(end)
       return
     }
