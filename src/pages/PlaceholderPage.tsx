@@ -1,3 +1,4 @@
+import { useEffect, useRef, type CSSProperties } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
   Activity,
@@ -6,11 +7,15 @@ import {
   Clock,
   LayoutDashboard,
   MapPin,
+  Plus,
+  Search,
+  SlidersHorizontal,
   Thermometer,
   Truck,
   Users,
   Warehouse,
 } from '../components/icons'
+import { useInView } from '../hooks/useInView'
 
 /** 사이드바 각 메뉴에 대응하는 라벨 (팀원이 페이지를 채울 때 참고) */
 const SECTION_LABELS: Record<string, { label: string; desc: string }> = {
@@ -83,7 +88,102 @@ function StatCard({ label, value, caption, icon: Icon, tone }: StatItem) {
   )
 }
 
-      function WarehousePage() {
+function PageHeader({
+  eyebrow,
+  title,
+  desc,
+  actionLabel,
+  actionTone,
+}: {
+  eyebrow: string
+  title: string
+  desc: string
+  actionLabel: string
+  actionTone: 'sky' | 'amber'
+}) {
+  const actionClass = actionTone === 'sky'
+    ? 'bg-sky-500 shadow-sky-500/25 hover:bg-sky-600'
+    : 'bg-amber-500 shadow-amber-500/25 hover:bg-amber-600'
+
+  return (
+    <div>
+      <p className="text-[14px] font-semibold text-slate-500">{eyebrow}</p>
+      <div className="mt-4 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+        <div>
+          <h2 className="text-[28px] font-black tracking-tight text-slate-950">{title}</h2>
+          <p className="mt-2 text-[14px] font-medium leading-6 text-slate-500">{desc}</p>
+        </div>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <label className="flex h-11 min-w-0 items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm text-slate-400 shadow-sm shadow-slate-200/50 sm:w-72">
+            <Search className="h-4 w-4 shrink-0" />
+            <input className="min-w-0 flex-1 bg-transparent font-semibold outline-none placeholder:text-slate-400" placeholder="이름, 지역, 상태 검색" />
+          </label>
+          <button type="button" className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-extrabold text-slate-700 shadow-sm shadow-slate-200/50 transition-colors hover:bg-slate-50">
+            <SlidersHorizontal className="h-4 w-4" />
+            필터
+          </button>
+          <button type="button" className={`inline-flex h-11 items-center justify-center gap-2 rounded-2xl px-5 text-sm font-extrabold text-white shadow-lg transition-colors ${actionClass}`}>
+            <Plus className="h-4 w-4" />
+            {actionLabel}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ResourcePage({ activeSection }: { activeSection: 'warehouses' | 'drivers' }) {
+  const warehouseRef = useRef<HTMLElement>(null)
+  const driverRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    const target = activeSection === 'drivers' ? driverRef.current : warehouseRef.current
+    const timeoutId = window.setTimeout(() => {
+      target?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 120)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [activeSection])
+
+  return (
+    <div className="mx-auto max-w-[1400px] px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
+      <section>
+        <h1 className="text-[30px] font-black tracking-tight text-slate-950">자원</h1>
+        <p className="mt-2 text-[14px] font-medium text-slate-500">창고 재고·온도부터 기사 배정과 운행 현황까지 자원 관리 과정을 이 페이지에서 확인하고 관리하세요.</p>
+      </section>
+
+      <section ref={warehouseRef} className="mt-8 scroll-mt-6">
+        <PageHeader
+          eyebrow="자원 관리"
+          title="창고 관리"
+          desc="창고별 재고·온도 현황을 확인하고 신규 창고를 등록할 수 있습니다."
+          actionLabel="신규 창고"
+          actionTone="sky"
+        />
+        <div className="mt-6">
+          <WarehousePage />
+        </div>
+      </section>
+
+      <section ref={driverRef} className="mt-14 scroll-mt-6 border-t border-slate-200 pt-12">
+        <PageHeader
+          eyebrow="자원 관리"
+          title="기사 관리"
+          desc="배송 기사 배정과 운행 현황을 이어서 확인하고 관리할 수 있습니다."
+          actionLabel="신규 기사"
+          actionTone="amber"
+        />
+        <div className="mt-6">
+          <DriverPage />
+        </div>
+      </section>
+    </div>
+  )
+}
+
+function WarehousePage() {
+  const { ref, inView } = useInView<HTMLDivElement>()
+
   return (
     <>
       <div className="grid gap-4 sm:grid-cols-3">
@@ -91,15 +191,12 @@ function StatCard({ label, value, caption, icon: Icon, tone }: StatItem) {
       </div>
 
       <section className="mt-5 rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/70">
-        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.24em] text-sky-500">Warehouse Monitor</p>
-            <h2 className="mt-2 text-xl font-black text-slate-950">창고별 재고·온도 현황</h2>
-          </div>
-          <button type="button" className="rounded-2xl bg-sky-500 px-4 py-2 text-sm font-extrabold text-white shadow-lg shadow-sky-500/25">+ 창고 등록</button>
+        <div className="mb-5">
+          <p className="text-xs font-black uppercase tracking-[0.24em] text-sky-500">Warehouse Monitor</p>
+          <h3 className="mt-2 text-xl font-black text-slate-950">창고별 재고·온도 현황</h3>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-2">
+        <div ref={ref} className="grid gap-4 lg:grid-cols-2">
           {warehouseRows.map(({ name, zone, temp, capacity, status }) => (
             <article key={name} className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -120,7 +217,10 @@ function StatCard({ label, value, caption, icon: Icon, tone }: StatItem) {
                 </div>
               </div>
               <div className="mt-5 h-2.5 overflow-hidden rounded-full bg-slate-200">
-                <div className="h-full rounded-full bg-gradient-to-r from-sky-400 to-cyan-300" style={{ width: `${capacity}%` }} />
+                <div
+                  className={`grow-bar h-full rounded-full bg-gradient-to-r from-sky-400 to-cyan-300 ${inView ? 'is-visible' : ''}`}
+                  style={{ '--bar-w': `${capacity}%`, '--reveal-delay': '120ms' } as CSSProperties}
+                />
               </div>
             </article>
           ))}
@@ -137,13 +237,10 @@ function DriverPage() {
         {driverStats.map((stat) => <StatCard key={stat.label} {...stat} />)}
       </div>
 
-       <section className="mt-5 rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/70">
-        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.24em] text-amber-500">Driver Dispatch</p>
-            <h2 className="mt-2 text-xl font-black text-slate-950">기사 배정·운행 현황</h2>
-          </div>
-          <button type="button" className="rounded-2xl bg-amber-500 px-4 py-2 text-sm font-extrabold text-white shadow-lg shadow-amber-500/25">+ 기사 등록</button>
+      <section className="mt-5 rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/70">
+        <div className="mb-5">
+          <p className="text-xs font-black uppercase tracking-[0.24em] text-amber-500">Driver Dispatch</p>
+          <h3 className="mt-2 text-xl font-black text-slate-950">기사 배정·운행 현황</h3>
         </div>
 
         <div className="overflow-hidden rounded-3xl border border-slate-200">
@@ -204,6 +301,10 @@ export default function PlaceholderPage() {
   const meta = SECTION_LABELS[section]
   const isResourcePage = section === 'warehouses' || section === 'drivers'
 
+  if (isResourcePage) {
+    return <ResourcePage activeSection={section} />
+  }
+
   return (
     <div className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
       <div className="flex items-center gap-2 text-[12px] text-slate-400">
@@ -223,7 +324,7 @@ export default function PlaceholderPage() {
       </div>
 
       <div className="mt-6">
-        {section === 'warehouses' ? <WarehousePage /> : section === 'drivers' ? <DriverPage /> : <SkeletonPage />}
+        <SkeletonPage />
       </div>
 
       <Link
