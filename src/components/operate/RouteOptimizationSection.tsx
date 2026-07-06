@@ -9,6 +9,7 @@ import {
   ROUTE_ANALYSIS,
   ROUTE_ANALYSIS_PERIODS,
   ROUTE_IMPROVEMENTS,
+  ROUTE_HIGHLIGHTS,
 } from '../../data/operate'
 import { Panel, PageSectionHeader, TINT } from './shared'
 
@@ -17,6 +18,12 @@ const KPI_ICONS = {
   fuel: Fuel,
   time: Clock,
   efficiency: TrendingUp,
+} as const
+
+const HIGHLIGHT_ICONS = {
+  distance: Route,
+  fuel: Fuel,
+  time: Clock,
 } as const
 
 /** 추천 경로 미니맵 — 정적 데모용 경로 라인 */
@@ -252,9 +259,33 @@ function RouteAnalysisCard() {
   )
 }
 
+function RouteHighlightBanner() {
+  return (
+    <Panel title="이달의 최적화 하이라이트" delay={0} className="lg:col-span-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        {ROUTE_HIGHLIGHTS.map((h, i) => {
+          const Icon = HIGHLIGHT_ICONS[h.icon]
+          return (
+            <Reveal key={h.icon} delay={i * 60} className="flex gap-3">
+              <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${TINT[ROUTE_KPIS.find((k) => k.key === h.icon)?.tint ?? 'sky']}`}>
+                <Icon className="h-[18px] w-[18px]" />
+              </span>
+              <p className="text-[12.5px] leading-relaxed text-slate-500">{h.text}</p>
+            </Reveal>
+          )
+        })}
+      </div>
+    </Panel>
+  )
+}
+
 const RouteOptimizationSection = forwardRef<HTMLElement>((_props, ref) => {
   return (
-    <section ref={ref} id="route-optimization" className="mt-10 scroll-mt-20 lg:mt-14 lg:scroll-mt-8">
+    <section
+      ref={ref}
+      id="route-optimization"
+      className="mt-10 scroll-mt-20 lg:mt-14 lg:min-h-screen lg:scroll-mt-8"
+    >
       <Reveal>
         <PageSectionHeader title="경로 최적화" desc="AI 기반 최적 경로를 설계하고 효율성을 분석할 수 있습니다." />
       </Reveal>
@@ -295,6 +326,10 @@ const RouteOptimizationSection = forwardRef<HTMLElement>((_props, ref) => {
         <RecommendedRoutesCard />
         <RouteDetailCard />
         <RouteAnalysisCard />
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 lg:grid-cols-3">
+        <RouteHighlightBanner />
       </div>
     </section>
   )

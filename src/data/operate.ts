@@ -338,3 +338,15 @@ export const ROUTE_IMPROVEMENTS: string[] = [
   '고속도로 이용으로 12km 단축 가능',
   '적재량 최적화로 연료 5% 절감 가능',
 ]
+
+export interface RouteHighlight {
+  icon: 'distance' | 'fuel' | 'time'
+  text: string
+}
+
+/** 경로 최적화 섹션 하단 요약 배너 — KPI를 문장형으로 재구성 */
+export const ROUTE_HIGHLIGHTS: RouteHighlight[] = [
+  { icon: 'distance', text: '이번 달 전체 운행 거리를 12,850km 단축해 차량 마모와 정비 비용 부담을 함께 줄였습니다.' },
+  { icon: 'fuel', text: '경로 재설계로 연료 2,340L를 절감했고, 절감분은 탄소 배출량 감소로도 이어지고 있습니다.' },
+  { icon: 'time', text: '평균 운행 시간을 45.2시간 줄여, 기사님들의 근무 강도와 배송 리드타임을 동시에 개선했습니다.' },
+]
