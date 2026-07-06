@@ -19,7 +19,7 @@ import {
   ORDER_STATUS_DONUT,
   DAILY_ORDERS,
   TOP_CUSTOMERS,
-  ORDER_PAGE_COUNT,
+  ORDER_LIST_PAGE_SIZE,
   type OrderTab,
 } from '../../data/operate'
 import { KpiTile, Panel, PageSectionHeader, VALUE_TINT } from './shared'
@@ -228,45 +228,57 @@ function OrderTable({ rows }: { rows: typeof ORDERS }) {
   )
 }
 
-function Pagination({ page, onChange }: { page: number; onChange: (p: number) => void }) {
-  const pages = [1, 2, 3, 4, 5]
+/** 현재 페이지 주변만 보여주고 나머지는 …으로 줄인 페이지 번호 목록을 만든다. */
+function getPageItems(current: number, total: number): (number | 'ellipsis')[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1)
+  const items: (number | 'ellipsis')[] = [1]
+  const start = Math.max(2, current - 1)
+  const end = Math.min(total - 1, current + 1)
+  if (start > 2) items.push('ellipsis')
+  for (let p = start; p <= end; p++) items.push(p)
+  if (end < total - 1) items.push('ellipsis')
+  items.push(total)
+  return items
+}
+
+function Pagination({ page, totalPages, onChange }: { page: number; totalPages: number; onChange: (p: number) => void }) {
+  const items = getPageItems(page, totalPages)
   return (
     <div className="mt-5 flex items-center justify-center gap-1">
       <button
         type="button"
         onClick={() => onChange(Math.max(1, page - 1))}
+        disabled={page <= 1}
         aria-label="이전 페이지"
-        className="grid h-8 w-8 place-items-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+        className="grid h-8 w-8 place-items-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 disabled:pointer-events-none disabled:opacity-40"
       >
         <ChevronLeft className="h-4 w-4" />
       </button>
-      {pages.map((p) => (
-        <button
-          key={p}
-          type="button"
-          onClick={() => onChange(p)}
-          className={`grid h-8 w-8 place-items-center rounded-lg text-[13px] font-semibold transition-colors ${
-            page === p ? 'bg-sky-500 text-white shadow-sm shadow-sky-500/25' : 'text-slate-500 hover:bg-slate-100'
-          }`}
-        >
-          {p}
-        </button>
-      ))}
-      <span className="px-1 text-slate-300">…</span>
+      {items.map((p, i) =>
+        p === 'ellipsis' ? (
+          <span key={`ellipsis-${i}`} className="px-1 text-slate-300">
+            …
+          </span>
+        ) : (
+          <button
+            key={p}
+            type="button"
+            onClick={() => onChange(p)}
+            aria-current={page === p ? 'page' : undefined}
+            className={`grid h-8 w-8 place-items-center rounded-lg text-[13px] font-semibold transition-colors ${
+              page === p ? 'bg-sky-500 text-white shadow-sm shadow-sky-500/25' : 'text-slate-500 hover:bg-slate-100'
+            }`}
+          >
+            {p}
+          </button>
+        ),
+      )}
       <button
         type="button"
-        onClick={() => onChange(ORDER_PAGE_COUNT)}
-        className={`grid h-8 w-8 place-items-center rounded-lg text-[13px] font-semibold transition-colors ${
-          page === ORDER_PAGE_COUNT ? 'bg-sky-500 text-white shadow-sm shadow-sky-500/25' : 'text-slate-500 hover:bg-slate-100'
-        }`}
-      >
-        {ORDER_PAGE_COUNT}
-      </button>
-      <button
-        type="button"
-        onClick={() => onChange(Math.min(ORDER_PAGE_COUNT, page + 1))}
+        onClick={() => onChange(Math.min(totalPages, page + 1))}
+        disabled={page >= totalPages}
         aria-label="다음 페이지"
-        className="grid h-8 w-8 place-items-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+        className="grid h-8 w-8 place-items-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 disabled:pointer-events-none disabled:opacity-40"
       >
         <ChevronRight className="h-4 w-4" />
       </button>
@@ -289,6 +301,10 @@ const OrderManagementSection = forwardRef<HTMLElement>((_props, ref) => {
       return matchesTab && matchesQuery
     })
   }, [tab, query])
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / ORDER_LIST_PAGE_SIZE))
+  const safePage = Math.min(page, totalPages)
+  const pageRows = filtered.slice((safePage - 1) * ORDER_LIST_PAGE_SIZE, safePage * ORDER_LIST_PAGE_SIZE)
 
   return (
     <section ref={ref} id="order-management" className="scroll-mt-20 lg:scroll-mt-8">
@@ -348,13 +364,18 @@ const OrderManagementSection = forwardRef<HTMLElement>((_props, ref) => {
         delay={120}
         className="mt-4"
         action={
-          <button
-            type="button"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-[12.5px] font-semibold text-slate-600 transition-colors hover:border-slate-300 hover:bg-slate-50"
-          >
-            <Download className="h-3.5 w-3.5" />
-            엑셀 다운로드
-          </button>
+          <div className="flex items-center gap-3">
+            <span className="text-[12.5px] font-medium text-slate-400">
+              총 <b className="font-bold text-slate-600">{filtered.length.toLocaleString()}</b>건
+            </span>
+            <button
+              type="button"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-[12.5px] font-semibold text-slate-600 transition-colors hover:border-slate-300 hover:bg-slate-50"
+            >
+              <Download className="h-3.5 w-3.5" />
+              엑셀 다운로드
+            </button>
+          </div>
         }
       >
         <div className="-mt-1 mb-4 flex flex-wrap gap-1.5 border-b border-slate-100 pb-4">
@@ -374,8 +395,8 @@ const OrderManagementSection = forwardRef<HTMLElement>((_props, ref) => {
             </button>
           ))}
         </div>
-        <OrderTable rows={filtered} />
-        <Pagination page={page} onChange={setPage} />
+        <OrderTable rows={pageRows} />
+        <Pagination page={safePage} totalPages={totalPages} onChange={setPage} />
       </Panel>
 
       {/* 하단 3열 */}

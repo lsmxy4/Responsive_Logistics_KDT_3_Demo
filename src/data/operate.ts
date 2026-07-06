@@ -45,55 +45,111 @@ export interface OrderRow {
   status: OrderStatus
 }
 
-export const ORDERS: OrderRow[] = [
-  {
-    id: 'ORD-2024-00012530',
-    placedAt: '2024-05-20 14:30',
-    customer: '(주)스마트테크',
-    receiver: '김지훈',
-    address: '부산광역시 강서구',
-    amount: 2350000,
-    status: '배송 중',
-  },
-  {
-    id: 'ORD-2024-00012529',
-    placedAt: '2024-05-20 14:25',
-    customer: '(주)이레유통',
-    receiver: '이서연',
-    address: '경기도 안산시',
-    amount: 1850000,
-    status: '처리 중',
-  },
-  {
-    id: 'ORD-2024-00012528',
-    placedAt: '2024-05-20 14:20',
-    customer: '(주)비엔씨',
-    receiver: '박민수',
-    address: '대구광역시 북구',
-    amount: 980000,
-    status: '완료',
-  },
-  {
-    id: 'ORD-2024-00012527',
-    placedAt: '2024-05-20 14:15',
-    customer: '(주)아이로지스',
-    receiver: '최유진',
-    address: '광주광역시 광산구',
-    amount: 1250000,
-    status: '신규 접수',
-  },
-  {
-    id: 'ORD-2024-00012526',
-    placedAt: '2024-05-20 14:10',
-    customer: '(주)엑스트솔루션',
-    receiver: '장현우',
-    address: '인천광역시 연수구',
-    amount: 3120000,
-    status: '배송 중',
-  },
+const CUSTOMER_POOL = [
+  '(주)스마트테크',
+  '(주)이레유통',
+  '(주)비엔씨',
+  '(주)아이로지스',
+  '(주)엑스트솔루션',
+  '(주)그린푸드',
+  '(주)한빛물류',
+  '(주)대성상사',
+  '(주)유니온텍',
+  '(주)케이앤라인',
+  '(주)삼일유통',
+  '(주)파인텍',
 ]
+const RECEIVER_POOL = [
+  '김지훈', '이서연', '박민수', '최유진', '장현우', '정다은', '오세훈', '한지민', '윤도현', '신유리', '조은서', '문성민',
+]
+const ADDRESS_POOL = [
+  '부산광역시 강서구',
+  '경기도 안산시',
+  '대구광역시 북구',
+  '광주광역시 광산구',
+  '인천광역시 연수구',
+  '서울특별시 강남구',
+  '대전광역시 유성구',
+  '울산광역시 남구',
+  '경상남도 창원시',
+  '전라북도 전주시',
+  '충청남도 천안시',
+  '강원특별자치도 원주시',
+]
+const STATUS_CYCLE: OrderStatus[] = ['배송 중', '처리 중', '완료', '신규 접수', '배송 중', '배송 준비', '완료', '취소/반품']
 
-export const ORDER_PAGE_COUNT = 100
+/** 화면 상단에 보이는 5건(레퍼런스 디자인)에 이어, 목록·페이지네이션이 실제로 동작하도록 목데이터를 더 생성한다. */
+function buildOrders(): OrderRow[] {
+  const featured: OrderRow[] = [
+    {
+      id: 'ORD-2024-00012530',
+      placedAt: '2024-05-20 14:30',
+      customer: '(주)스마트테크',
+      receiver: '김지훈',
+      address: '부산광역시 강서구',
+      amount: 2350000,
+      status: '배송 중',
+    },
+    {
+      id: 'ORD-2024-00012529',
+      placedAt: '2024-05-20 14:25',
+      customer: '(주)이레유통',
+      receiver: '이서연',
+      address: '경기도 안산시',
+      amount: 1850000,
+      status: '처리 중',
+    },
+    {
+      id: 'ORD-2024-00012528',
+      placedAt: '2024-05-20 14:20',
+      customer: '(주)비엔씨',
+      receiver: '박민수',
+      address: '대구광역시 북구',
+      amount: 980000,
+      status: '완료',
+    },
+    {
+      id: 'ORD-2024-00012527',
+      placedAt: '2024-05-20 14:15',
+      customer: '(주)아이로지스',
+      receiver: '최유진',
+      address: '광주광역시 광산구',
+      amount: 1250000,
+      status: '신규 접수',
+    },
+    {
+      id: 'ORD-2024-00012526',
+      placedAt: '2024-05-20 14:10',
+      customer: '(주)엑스트솔루션',
+      receiver: '장현우',
+      address: '인천광역시 연수구',
+      amount: 3120000,
+      status: '배송 중',
+    },
+  ]
+
+  const generated: OrderRow[] = Array.from({ length: 55 }).map((_, i) => {
+    const seq = 12525 - i
+    const day = Math.max(1, 20 - Math.floor(i / 24))
+    const hour = Math.max(0, 13 - Math.floor((i % 24) / 2))
+    const minute = (55 - (i % 12) * 5 + 60) % 60
+    return {
+      id: `ORD-2024-000${seq}`,
+      placedAt: `2024-05-${String(day).padStart(2, '0')} ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`,
+      customer: CUSTOMER_POOL[i % CUSTOMER_POOL.length],
+      receiver: RECEIVER_POOL[i % RECEIVER_POOL.length],
+      address: ADDRESS_POOL[i % ADDRESS_POOL.length],
+      amount: 300000 + ((i * 137) % 28) * 100000,
+      status: STATUS_CYCLE[i % STATUS_CYCLE.length],
+    }
+  })
+
+  return [...featured, ...generated]
+}
+
+export const ORDERS: OrderRow[] = buildOrders()
+
+export const ORDER_LIST_PAGE_SIZE = 8
 
 export const ORDER_STATUS_DONUT: { label: string; count: number; color: string }[] = [
   { label: '신규 접수', count: 320, color: '#8b5cf6' },
