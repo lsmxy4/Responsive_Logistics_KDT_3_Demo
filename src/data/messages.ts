@@ -2,13 +2,13 @@ import type { ComponentType } from "react"
 
 import {
   Thermometer,
-  CalendarClock,
-  PackageSearch,
-  PackageCheck,
+  Clock,
+  Package,
+  CheckCircle,
   Truck,
   RefreshCw,
   Snowflake,
-} from "lucide-react"
+} from "../components/icons"
 
 export type IconType = ComponentType<{ className?: string }>
 
@@ -59,6 +59,14 @@ export type SettingsState = {
   sound: boolean
 }
 
+export const DEFAULT_NOTIFICATION_SETTINGS: SettingsState = {
+  temp: true,
+  expiry: true,
+  stock: true,
+  system: false,
+  sound: true,
+}
+
 // ---------------------------------------------------------------------------
 // Static seed data (mirrors the reference screenshot)
 // ---------------------------------------------------------------------------
@@ -84,7 +92,7 @@ export const SEED: NotificationItem[] = [
     group: "today",
     category: "expiry",
     severity: "warning",
-    icon: CalendarClock,
+    icon: Clock,
     title: "유통기한 D-1 긴급 알림 — 냉동 참치 LOT#2847",
     desc: "냉동 참치 LOT#2847의 유통기한이 내일(2025-05-21) 만료됩니다. FEFO 출고 처리를 즉시 진행하세요.",
     tag: "유통기한",
@@ -100,7 +108,7 @@ export const SEED: NotificationItem[] = [
     group: "today",
     category: "expiry",
     severity: "warning-amber",
-    icon: CalendarClock,
+    icon: Clock,
     title: "유통기한 D-2 경고 — 냉장 우유 LOT#3142",
     desc: "냉장 우유 LOT#3142의 유통기한이 2일 후(2025-05-22) 만료됩니다. 출고 우선순위를 확인하세요.",
     tag: "유통기한",
@@ -116,7 +124,7 @@ export const SEED: NotificationItem[] = [
     group: "today",
     category: "stock",
     severity: "info",
-    icon: PackageSearch,
+    icon: Package,
     title: "재고 부족 경고 — 냉장 연어 (LOT#2991)",
     desc: "냉장 연어의 현재 재고가 안전 재고(150건) 이하인 83건으로 감소했습니다. 발주를 검토하세요.",
     tag: "재고 알림",
@@ -132,7 +140,7 @@ export const SEED: NotificationItem[] = [
     group: "earlier",
     category: "stock",
     severity: "success",
-    icon: PackageCheck,
+    icon: CheckCircle,
     title: "입고 완료 — ORD-2024-00012530 (냉동 참치 200박스)",
     desc: "냉동 참치 200박스가 냉동창고 A동 3구역에 정상 입고 처리되었습니다. 담당자: 김철수",
     tag: "입고 완료",
@@ -196,7 +204,7 @@ export const SEED: NotificationItem[] = [
     group: "earlier",
     category: "expiry",
     severity: "warning",
-    icon: CalendarClock,
+    icon: Clock,
     title: "유통기한 D-1 알림 — 냉장 치즈 LOT#5123",
     desc: "냉장 치즈 LOT#5123의 유통기한이 내일 만료됩니다.",
     tag: "유통기한",
@@ -212,7 +220,7 @@ export const SEED: NotificationItem[] = [
     group: "today",
     category: "stock",
     severity: "warning-amber",
-    icon: PackageSearch,
+    icon: Package,
     title: "재고 부족 경고 — 냉동 닭고기 LOT#9981",
     desc: "냉동 닭고기 재고가 안전 재고 이하로 감소했습니다.",
     tag: "재고 알림",

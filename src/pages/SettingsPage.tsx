@@ -158,7 +158,7 @@ export default function SettingsPage() {
                 <div key={label}>
                   <div className="flex justify-between text-sm font-extrabold text-slate-700">
                     <span>{label}</span>
-                    <span>{cation}</span>
+                    <span>{caption}</span>
                   </div>
                   <div className="mt-2 h-2.5 overflow-hidden rounded-full bg-white/80">
                     <div
