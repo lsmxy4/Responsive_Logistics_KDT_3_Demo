@@ -17,8 +17,8 @@ export default function SettingsPanel({
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-30 flex justify-end bg-slate-900/30 backdrop-blur-sm">
-      <div className="animate-[slideIn_0.25s_ease-out] flex h-full w-full max-w-sm flex-col bg-white p-6 shadow-2xl">
+    <div className="fixed inset-0 z-[70] flex items-start justify-end bg-slate-900/30 p-4 backdrop-blur-sm sm:p-6">
+      <div className="animate-[dropIn_0.25s_ease-out] flex max-h-[calc(100vh-2rem)] w-full max-w-sm flex-col overflow-y-auto rounded-[28px] bg-white p-6 shadow-2xl shadow-slate-900/20 sm:max-h-[calc(100vh-3rem)]">
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-lg font-extrabold text-slate-900">알림 설정</h2>
           <button onClick={onClose} className="grid h-8 w-8 place-items-center rounded-lg text-slate-400 hover:bg-slate-100">
@@ -58,7 +58,7 @@ export default function SettingsPanel({
         </button>
       </div>
 
-      <style>{`@keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }`}</style>
+      <style>{`@keyframes dropIn { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: translateY(0); } }`}</style>
     </div>
   )
 }
