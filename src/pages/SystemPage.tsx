@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState, type CSSProperties } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from "react"
+import { Navigate, useLocation, useNavigate } from "react-router-dom"
 import { CheckCircle, Lock, RefreshCw, Snowflake } from "../components/icons"
 import { useInView } from "../hooks/useInView"
 import {
@@ -457,11 +458,130 @@ function SettingsSection() {
   )
 }
 
-export default function System() {
+const PATH_TO_SECTION: Record<string, string> = {
+  "/messages": "messages",
+  "/settings": "settings",
+}
+
+const SECTION_ORDER: { id: string; path: string }[] = [
+  { id: "messages", path: "/messages" },
+  { id: "settings", path: "/settings" },
+]
+
+const SCROLL_OFFSET = 24
+const SPY_LINE_OFFSET = 96
+
+export default function SystemPage() {
+  const location = useLocation()
+  const navigate = useNavigate()
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const messagesRef = useRef<HTMLElement>(null)
+  const settingsRef = useRef<HTMLElement>(null)
+  const skipNextScrollRef = useRef(false)
+  const isProgrammaticScrollRef = useRef(false)
+  const activePathRef = useRef(location.pathname)
+
+  const sectionRefs: Record<string, RefObject<HTMLElement>> = {
+    messages: messagesRef,
+    settings: settingsRef,
+  }
+
+  const scrollToPath = useCallback((path: string) => {
+    const container = scrollRef.current
+    const sectionId = PATH_TO_SECTION[path]
+    const target = sectionId ? sectionRefs[sectionId]?.current : null
+    if (!container || !target) return
+
+    const targetRect = target.getBoundingClientRect()
+    const containerRect = container.getBoundingClientRect()
+    const isFirstSection = path === SECTION_ORDER[0].path
+    const targetY = isFirstSection
+      ? 0
+      : Math.max(0, container.scrollTop + (targetRect.top - containerRect.top) - SCROLL_OFFSET)
+    const reduceMotion =
+      typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
+
+    if (Math.abs(container.scrollTop - targetY) < 1) return
+
+    isProgrammaticScrollRef.current = true
+    const clearFlag = () => {
+      isProgrammaticScrollRef.current = false
+    }
+
+    if ("onscrollend" in container) {
+      container.addEventListener("scrollend", clearFlag, { once: true })
+    } else {
+      setTimeout(clearFlag, 700)
+    }
+
+    container.scrollTo({ top: targetY, behavior: reduceMotion ? "auto" : "smooth" })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    activePathRef.current = location.pathname
+  }, [location.pathname])
+
+  useEffect(() => {
+    if (skipNextScrollRef.current) {
+      skipNextScrollRef.current = false
+      return
+    }
+
+    scrollToPath(location.pathname)
+  }, [location.pathname, location.key, scrollToPath])
+
+  useEffect(() => {
+    const container = scrollRef.current
+    if (!container) return
+
+    const sections = SECTION_ORDER.map((s) => ({ path: s.path, el: sectionRefs[s.id]?.current })).filter(
+      (s): s is { path: string; el: HTMLElement } => !!s.el,
+    )
+    if (sections.length === 0) return
+
+    let ticking = false
+
+    const updateActivePath = () => {
+      ticking = false
+      if (isProgrammaticScrollRef.current) return
+
+      const probeLine = container.getBoundingClientRect().top + SPY_LINE_OFFSET
+      let current = sections[0]
+      for (const s of sections) {
+        if (s.el.getBoundingClientRect().top <= probeLine) current = s
+      }
+
+      if (current.path !== activePathRef.current) {
+        activePathRef.current = current.path
+        skipNextScrollRef.current = true
+        navigate(current.path, { replace: true, preventScrollReset: true })
+      }
+    }
+
+    const handleScroll = () => {
+      if (ticking) return
+      ticking = true
+      requestAnimationFrame(updateActivePath)
+    }
+
+    container.addEventListener("scroll", handleScroll, { passive: true })
+    return () => container.removeEventListener("scroll", handleScroll)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navigate])
+
+  if (location.pathname === "/system") {
+    return <Navigate to="/messages" replace />
+  }
+
   return (
-    <div className="min-h-screen bg-slate-50">
-      <MessageSection />
-      <SettingsSection />
+    <div ref={scrollRef} className="h-[calc(100vh-3.5rem)] overflow-y-auto bg-slate-50 lg:h-screen">
+      <section ref={messagesRef} className="scroll-mt-6">
+        <MessageSection />
+      </section>
+      <section ref={settingsRef} className="scroll-mt-6 border-t border-slate-200">
+        <SettingsSection />
+      </section>
     </div>
   )
 }

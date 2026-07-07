@@ -27,8 +27,13 @@ export default function MessageHeader({
       }`}
     >
       <div>
-        <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-[28px]">알림 센터</h1>
-        <p className="mt-1 text-sm text-slate-500">실시간 시스템 알림을 확인하고 관리할 수 있습니다.</p>
+        <h1 className="flex items-center gap-3 text-[36px] font-black tracking-tight text-slate-900">
+          <span className="bg-gradient-to-r from-sky-500 to-cyan-500 bg-clip-text text-transparent">알림 센터</span>
+          <span className="rounded-full bg-slate-100 px-3 py-1 text-[12px] font-bold uppercase tracking-[0.2em] text-slate-500">
+            Messages
+          </span>
+        </h1>
+        <p className="mt-2 text-[15px] font-medium text-slate-500">실시간 시스템 알림을 확인하고 관리할 수 있습니다.</p>
       </div>
       <div className="flex flex-wrap gap-2">
         <button

@@ -29,9 +29,8 @@ const router = createBrowserRouter([
       { path: '/routes', element: <ProtectedRoute><OperatePage /></ProtectedRoute> },
       // 분석(분석 리포트)은 AnalyzePage에서 구현한다.
       { path: '/reports', element: <ProtectedRoute><AnalyzePage /></ProtectedRoute> },
-      { path: '/system', element: <ProtectedRoute><SystemPage/></ProtectedRoute> },
-      { path: '/messages', element: <ProtectedRoute><Navigate to="/system" replace /></ProtectedRoute> },
-      { path: '/settings', element: <ProtectedRoute><Navigate to="/system" replace /></ProtectedRoute> },
+      { path: '/messages', element: <ProtectedRoute><SystemPage /></ProtectedRoute> },
+      { path: '/settings', element: <ProtectedRoute><SystemPage /></ProtectedRoute> },
       // 사이드바 나머지 메뉴 — 팀원이 채워 넣을 골조 슬롯
       { path: '/:section', element: <ProtectedRoute><PlaceholderPage /></ProtectedRoute> },
     ],

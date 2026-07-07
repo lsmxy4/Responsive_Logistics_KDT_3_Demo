@@ -100,6 +100,11 @@ function SidebarContent() {
                   <NavLink
                     to={item.to}
                     end={item.end}
+                    onClick={() => {
+                      if (item.to === '/messages' || item.to === '/settings') {
+                        window.dispatchEvent(new CustomEvent('system-section-link-click', { detail: { path: item.to } }))
+                      }
+                    }}
                     className={({ isActive }) =>
                       `group flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-[14px] font-medium transition-all duration-200 ${
                         isActive

@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Link, useParams, useLocation, useNavigate } from "react-router-dom";
 import {
   Activity,
-  Bell,
   Building,
   ChevronRight,
   CheckCircle,
@@ -774,73 +773,6 @@ function SettingsPage() {
     </div>
   );
 }
-
-const PATH_TO_SECTION_SYS: Record<string, string> = {
-  '/messages': 'messages',
-  '/settings': 'settings',
-};
-
-const SECTION_ORDER_SYS = [
-  { id: 'messages', path: '/messages' },
-  { id: 'settings', path: '/settings' },
-];
-
-function SystemPage() {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const settingsRef = useRef<HTMLElement>(null);
-  const messagesRef = useRef<HTMLElement>(null);
-  const skipNextScrollRef = useRef(false);
-  const isProgrammaticScrollRef = useRef(false);
-  const activePathRef = useRef(location.pathname);
-  const sectionRefs: Record<string, React.RefObject<HTMLElement>> = { settings: settingsRef, messages: messagesRef };
-
-  useEffect(() => { activePathRef.current = location.pathname; }, [location.pathname]);
-
-  useEffect(() => {
-    if (skipNextScrollRef.current) { skipNextScrollRef.current = false; return; }
-    const container = scrollRef.current;
-    const sectionId = PATH_TO_SECTION_SYS[location.pathname];
-    const target = sectionId ? sectionRefs[sectionId]?.current : null;
-    if (!container || !target) return;
-    const targetRect = target.getBoundingClientRect();
-    const containerRect = container.getBoundingClientRect();
-    const isFirstSection = location.pathname === SECTION_ORDER_SYS[0].path;
-    const targetY = isFirstSection ? 0 : Math.max(0, container.scrollTop + (targetRect.top - containerRect.top) - SCROLL_OFFSET);
-    const reduceMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (Math.abs(container.scrollTop - targetY) < 1) return;
-    isProgrammaticScrollRef.current = true;
-    const clearFlag = () => { isProgrammaticScrollRef.current = false; };
-    if ('onscrollend' in container) container.addEventListener('scrollend', clearFlag, { once: true });
-    else setTimeout(clearFlag, 700);
-    container.scrollTo({ top: targetY, behavior: reduceMotion ? 'auto' : 'smooth' });
-  }, [location.pathname]);
-
-  useEffect(() => {
-    const container = scrollRef.current;
-    if (!container) return;
-    const sections = SECTION_ORDER_SYS.map((s) => ({ path: s.path, el: sectionRefs[s.id]?.current })).filter((s): s is { path: string; el: HTMLElement } => !!s.el);
-    if (sections.length === 0) return;
-    let ticking = false;
-    const updateActivePath = () => {
-      ticking = false;
-      if (isProgrammaticScrollRef.current) return;
-      const probeLine = container.getBoundingClientRect().top + SPY_LINE_OFFSET;
-      let current = sections[0];
-      for (const s of sections) if (s.el.getBoundingClientRect().top <= probeLine) current = s;
-      if (current.path !== activePathRef.current) {
-        activePathRef.current = current.path;
-        skipNextScrollRef.current = true;
-        navigate(current.path, { replace: true, preventScrollReset: true });
-      }
-    };
-    const handleScroll = () => { if (ticking) return; ticking = true; requestAnimationFrame(updateActivePath); };
-    container.addEventListener('scroll', handleScroll, { passive: true });
-    return () => container.removeEventListener('scroll', handleScroll);
-  }, [navigate]);
-}
-
 
 function SkeletonPage() {
   return (
