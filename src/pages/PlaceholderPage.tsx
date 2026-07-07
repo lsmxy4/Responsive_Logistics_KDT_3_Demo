@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Link, useParams, useLocation, useNavigate } from "react-router-dom";
 import {
   Activity,
+  Bell,
   Building,
   ChevronRight,
   CheckCircle,
@@ -773,6 +774,177 @@ function SettingsPage() {
     </div>
   );
 }
+const messageStats: StatItem[] = [
+  { label: "미확인 알림", value: 3, unit: "건", caption: "온도 1 · 배송 2", icon: Bell, tone: "sky" },
+  { label: "오늘 발송", value: 28, unit: "건", caption: "자동 21 · 수동 7", icon: CheckCircle, tone: "emerald" },
+  { label: "평균 응답", value: 4, unit: "분", caption: "전일 대비 -2분", icon: Clock, tone: "violet" },
+];
+
+const messageRows = [
+  { title: "강남 냉장 센터 온도 이탈", desc: "A-3 구역이 5.8℃로 기준치를 초과했습니다.", time: "방금 전", type: "긴급", tone: "rose" },
+  { title: "서울 A-12 배송 지연", desc: "교통 정체로 도착 예정 시간이 18분 지연되었습니다.", time: "8분 전", type: "배송", tone: "sky" },
+  { title: "인천 냉동 허브 재고 부족", desc: "새벽배송 인기 품목 보충 요청이 필요합니다.", time: "24분 전", type: "재고", tone: "amber" },
+  { title: "야간 점검 리마인드", desc: "23:00 냉동 장비 정기 점검 일정이 등록되어 있습니다.", time: "1시간 전", type: "점검", tone: "slate" },
+];
+
+const messageToneClass: Record<string, string> = {
+  rose: "bg-rose-50 text-rose-700 ring-rose-100",
+  sky: "bg-sky-50 text-sky-700 ring-sky-100",
+  amber: "bg-amber-50 text-amber-700 ring-amber-100",
+  slate: "bg-slate-100 text-slate-600 ring-slate-200",
+};
+
+function MessagesPage() {
+  return (
+    <div className="mx-auto max-w-[1400px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+      <div className="flex items-center gap-2 text-[12px] text-slate-400">
+        <Link to="/" className="transition-colors hover:text-sky-600">대시보드</Link>
+        <ChevronRight className="h-3.5 w-3.5" />
+        <span className="font-medium text-slate-600">알림/메시지</span>
+      </div>
+
+      <section className="mt-4 overflow-hidden rounded-[34px] border border-slate-200 bg-white shadow-sm shadow-slate-200/70">
+        <div className="relative isolate bg-gradient-to-br from-slate-950 via-slate-900 to-rose-950 px-6 py-8 text-white sm:px-8 lg:px-10">
+          <div className="absolute right-0 top-0 -z-10 h-56 w-56 rounded-full bg-rose-400/20 blur-3xl" />
+          <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[12px] font-bold text-rose-100 ring-1 ring-white/15">
+            <Bell className="h-3.5 w-3.5" />
+            Notifications & Messages
+          </span>
+          <div className="mt-5 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <h1 className="text-[30px] font-black tracking-tight sm:text-4xl">알림/메시지</h1>
+              <p className="mt-3 max-w-2xl text-sm font-medium leading-6 text-slate-300">
+                온도 이탈, 배송 지연, 재고 부족 같은 운영 이벤트를 한 곳에서 확인하고 담당자에게 전달합니다.
+              </p>
+            </div>
+            <button type="button" className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-rose-500 px-5 text-sm font-extrabold text-white shadow-lg shadow-rose-900/25 transition-colors hover:bg-rose-400">
+              <Plus className="h-4 w-4" />
+              새 메시지 작성
+            </button>
+          </div>
+        </div>
+
+        <div className="grid gap-4 p-5 sm:p-6 lg:grid-cols-3 lg:p-8">
+          {messageStats.map((stat) => <StatCard key={stat.label} {...stat} />)}
+        </div>
+      </section>
+
+      <section className="mt-6 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+        <aside className="rounded-[30px] border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/70">
+          <p className="text-xs font-black uppercase tracking-[0.24em] text-rose-500">Message Channels</p>
+          <h2 className="mt-2 text-xl font-black text-slate-950">수신 채널</h2>
+          <div className="mt-5 space-y-3">
+            {["앱 푸시", "SMS", "이메일", "관제센터 공지"].map((channel, index) => (
+              <div key={channel} className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3 ring-1 ring-slate-200">
+                <span className="text-sm font-extrabold text-slate-700">{channel}</span>
+                <span className="text-xs font-bold text-slate-400">{index === 3 ? "공지" : "연결됨"}</span>
+              </div>
+            ))}
+          </div>
+        </aside>
+
+        <div className="rounded-[30px] border border-slate-200 bg-white p-6 shadow-sm shadow-slate-200/70">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.24em] text-sky-500">Inbox</p>
+              <h2 className="mt-2 text-xl font-black text-slate-950">최근 알림</h2>
+            </div>
+            <button type="button" className="rounded-2xl border border-slate-200 px-4 py-2 text-sm font-extrabold text-slate-700 hover:bg-slate-50">모두 읽음</button>
+          </div>
+          <div className="mt-5 divide-y divide-slate-200 overflow-hidden rounded-3xl border border-slate-200">
+            {messageRows.map((message) => (
+              <article key={message.title} className="flex gap-4 bg-white px-5 py-4">
+                <span className="mt-1 grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-slate-50 text-rose-500 ring-1 ring-slate-200"><Bell className="h-5 w-5" /></span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="font-extrabold text-slate-950">{message.title}</h3>
+                    <span className={`rounded-full px-2.5 py-1 text-[11px] font-extrabold ring-1 ${messageToneClass[message.tone]}`}>{message.type}</span>
+                  </div>
+                  <p className="mt-1 text-sm font-medium leading-6 text-slate-500">{message.desc}</p>
+                </div>
+                <time className="shrink-0 text-xs font-bold text-slate-400">{message.time}</time>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+const PATH_TO_SECTION_SYS: Record<string, string> = {
+  '/messages': 'messages',
+  '/settings': 'settings',
+};
+
+const SECTION_ORDER_SYS = [
+  { id: 'messages', path: '/messages' },
+  { id: 'settings', path: '/settings' },
+];
+
+function SystemPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const settingsRef = useRef<HTMLElement>(null);
+  const messagesRef = useRef<HTMLElement>(null);
+  const skipNextScrollRef = useRef(false);
+  const isProgrammaticScrollRef = useRef(false);
+  const activePathRef = useRef(location.pathname);
+  const sectionRefs: Record<string, React.RefObject<HTMLElement>> = { settings: settingsRef, messages: messagesRef };
+
+  useEffect(() => { activePathRef.current = location.pathname; }, [location.pathname]);
+
+  useEffect(() => {
+    if (skipNextScrollRef.current) { skipNextScrollRef.current = false; return; }
+    const container = scrollRef.current;
+    const sectionId = PATH_TO_SECTION_SYS[location.pathname];
+    const target = sectionId ? sectionRefs[sectionId]?.current : null;
+    if (!container || !target) return;
+    const targetRect = target.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+    const isFirstSection = location.pathname === SECTION_ORDER_SYS[0].path;
+    const targetY = isFirstSection ? 0 : Math.max(0, container.scrollTop + (targetRect.top - containerRect.top) - SCROLL_OFFSET);
+    const reduceMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (Math.abs(container.scrollTop - targetY) < 1) return;
+    isProgrammaticScrollRef.current = true;
+    const clearFlag = () => { isProgrammaticScrollRef.current = false; };
+    if ('onscrollend' in container) container.addEventListener('scrollend', clearFlag, { once: true });
+    else setTimeout(clearFlag, 700);
+    container.scrollTo({ top: targetY, behavior: reduceMotion ? 'auto' : 'smooth' });
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+    const sections = SECTION_ORDER_SYS.map((s) => ({ path: s.path, el: sectionRefs[s.id]?.current })).filter((s): s is { path: string; el: HTMLElement } => !!s.el);
+    if (sections.length === 0) return;
+    let ticking = false;
+    const updateActivePath = () => {
+      ticking = false;
+      if (isProgrammaticScrollRef.current) return;
+      const probeLine = container.getBoundingClientRect().top + SPY_LINE_OFFSET;
+      let current = sections[0];
+      for (const s of sections) if (s.el.getBoundingClientRect().top <= probeLine) current = s;
+      if (current.path !== activePathRef.current) {
+        activePathRef.current = current.path;
+        skipNextScrollRef.current = true;
+        navigate(current.path, { replace: true, preventScrollReset: true });
+      }
+    };
+    const handleScroll = () => { if (ticking) return; ticking = true; requestAnimationFrame(updateActivePath); };
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [navigate]);
+
+  return (
+    <div ref={scrollRef} className="h-[calc(100vh-3.5rem)] overflow-y-auto lg:h-screen">
+      <section ref={messagesRef} className="scroll-mt-6"><MessagesPage /></section>
+      <section ref={settingsRef} className="scroll-mt-6 border-t border-slate-200"><SettingsPage /></section>
+    </div>
+  );
+}
+
 
 function SkeletonPage() {
   return (
@@ -816,8 +988,8 @@ export default function PlaceholderPage() {
   const meta = SECTION_LABELS[section];
   const isResourcePage = section === "warehouses" || section === "drivers";
 
-  if (section === "settings") {
-    return <SettingsPage />;
+  if (section === "messages" || section === "settings") {
+    return <SystemPage />;
   }
 
   if (isResourcePage) {
